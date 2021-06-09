@@ -5,9 +5,7 @@ import com.fanch35000.genealogycheckcivilstatus.entity.ged.Indi;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Optional;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

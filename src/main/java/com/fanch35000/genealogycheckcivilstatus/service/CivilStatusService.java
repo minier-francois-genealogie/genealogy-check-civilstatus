@@ -7,38 +7,36 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class CivilStatusService {
 
-    public final HashMap<Integer, CivilStatus> launch(String dirLocation){
-        HashMap<Integer, CivilStatus> ancetres = new HashMap();
-        List<File> files  = listEtatCivil(dirLocation);
-        files.forEach(f -> analyseFile(f, ancetres));
+    public Set<Integer> listSosa = new HashSet<>();
+    public HashMap<Integer, CivilStatus> ancetres = new HashMap();
 
-        return ancetres;
+    public final void launch(String dirLocation) {
+        List<File> files = listEtatCivil(dirLocation);
+        files.forEach(f -> analyseFile(f));
     }
 
-    private final static List<File> listEtatCivil(String dirLocation){
+    private final static List<File> listEtatCivil(String dirLocation) {
 
         try {
             List<File> files = Files.list(Paths.get(dirLocation))
                     .filter(Files::isRegularFile)
                     .map(Path::toFile)
                     .collect(Collectors.toList());
-            return  files;
+            return files;
         } catch (IOException e) {
             e.printStackTrace();
         }
         return new ArrayList<>();
     }
 
-    private final void analyseFile(File file, HashMap<Integer, CivilStatus> ancetres){
+    private final void analyseFile(File file) {
         String fileName = file.getName();
 
         String pattern = "(\\S*)_([^\\.]+)\\.sosa_(\\d+)\\.([\\d-]+)\\.(.{1})(\\..+){0,1}\\.jpg";
@@ -48,16 +46,17 @@ public class CivilStatusService {
         Pattern r = Pattern.compile(pattern);
         Matcher m = r.matcher(fileName);
 
-        if(m.matches()) {
+        if (m.matches()) {
 
             String nom = m.group(1);
             String prenom = m.group(2);
             Integer sosa = Integer.parseInt(m.group(3));
+            listSosa.add(sosa);
             String date = m.group(4);
             String type = m.group(5);
             String villeRegistre = m.group(6);
-            if(villeRegistre!=null){
-                villeRegistre = villeRegistre.replaceFirst("\\.","");
+            if (villeRegistre != null) {
+                villeRegistre = villeRegistre.replaceFirst("\\.", "");
             }
 
             CivilStatus individu = ancetres.get(sosa);

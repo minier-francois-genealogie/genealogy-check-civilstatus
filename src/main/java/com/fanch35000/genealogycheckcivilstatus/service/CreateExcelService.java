@@ -22,6 +22,8 @@ import java.util.stream.Collectors;
 
 public class CreateExcelService {
 
+    public Set<Integer> listSosa = new HashSet<>();
+
     private final HSSFWorkbook workbook = new HSSFWorkbook();
     private final HSSFCellStyle styleGeneration = createStyleForGeneration(workbook);
     private final HSSFCellStyle styleTitle = createStyleForTitle(workbook);
@@ -400,6 +402,8 @@ public class CreateExcelService {
             Indi indi = INDIS.get(sosa);
             Integer minSosa = MIN_SOSA.get(sosa);
 
+            listSosa.add(minSosa);
+
             rownum++;
             row = sheet.createRow(rownum);
 
@@ -539,26 +543,42 @@ public class CreateExcelService {
                 if (mariage == null) {
                     mariage = new Fam();
                 }
-                // Date Mariage
-                cell = row.createCell(DATE_DE_MARIAGE, CellType.STRING);
-                cell.setCellValue(toExcelDate(toExcelDate(mariage.getDateMariage())));
-                dataFormatter.formatCellValue(cell);
-                // Lieu Mariage
-                cell = row.createCell(LIEU_DE_MARIAGE, CellType.STRING);
-                cell.setCellValue(compress(mariage.getLieuMariage()));
-                cell.setCellComment(getComment(workbook, sheet, row, cell, mariage.getLieuMariage()));
-                dataFormatter.formatCellValue(cell);
-                // Acte Décès
-                Cell cellActeMariage = row.createCell(ACTE_DE_MARIAGE, CellType.STRING);
-                if (actes != null && actes.getDateMariage() != null) {
-                    cellActeMariage.setCellValue(toExcelDate(toExcelDate(actes.getDateMariage())));
-                    cellActeMariage.setCellComment(getComment(workbook, sheet, row, cell, actes.getVilleRegistreMariage()));
-                    cellActeMariage.setCellStyle(styleOK);
-                } else {
-                    cellActeMariage.setCellValue("");
-                    if (getYear(indi.getDateNaissance()) > LIMIT_YEAR || getYear(mariage.getDateMariage()) > LIMIT_YEAR) {
-                        cellActeMariage.setCellStyle(styleGrey);
+                Cell cellActeMariage = null;
+                if (sosa % 2 == 0) {
+                    // Date Mariage
+                    cell = row.createCell(DATE_DE_MARIAGE, CellType.STRING);
+                    cell.setCellValue(toExcelDate(toExcelDate(mariage.getDateMariage())));
+                    dataFormatter.formatCellValue(cell);
+                    // Lieu Mariage
+                    cell = row.createCell(LIEU_DE_MARIAGE, CellType.STRING);
+                    cell.setCellValue(compress(mariage.getLieuMariage()));
+                    cell.setCellComment(getComment(workbook, sheet, row, cell, mariage.getLieuMariage()));
+                    dataFormatter.formatCellValue(cell);
+                    // Acte Mariage
+                    cellActeMariage = row.createCell(ACTE_DE_MARIAGE, CellType.STRING);
+                    if (actes != null && actes.getDateMariage() != null) {
+                        cellActeMariage.setCellValue(toExcelDate(toExcelDate(actes.getDateMariage())));
+                        cellActeMariage.setCellComment(getComment(workbook, sheet, row, cell, actes.getVilleRegistreMariage()));
+                        cellActeMariage.setCellStyle(styleOK);
+                    } else {
+                        cellActeMariage.setCellValue("");
+                        if (getYear(indi.getDateNaissance()) > LIMIT_YEAR || getYear(mariage.getDateMariage()) > LIMIT_YEAR) {
+                            cellActeMariage.setCellStyle(styleGrey);
+                        }
                     }
+                } else {
+                    // Date Mariage
+                    cell = row.createCell(DATE_DE_MARIAGE, CellType.STRING);
+                    cell.setCellValue("");
+                    cell.setCellStyle(styleGrey);
+                    // Lieu Mariage
+                    cell = row.createCell(LIEU_DE_MARIAGE, CellType.STRING);
+                    cell.setCellValue("");
+                    cell.setCellStyle(styleGrey);
+                    // Acte Mariage
+                    cellActeMariage = row.createCell(ACTE_DE_MARIAGE, CellType.STRING);
+                    cellActeMariage.setCellValue("");
+                    cellActeMariage.setCellStyle(styleGrey);
                 }
                 dataFormatter.formatCellValue(cellActeMariage);
 

@@ -7,25 +7,60 @@ import com.fanch35000.genealogycheckcivilstatus.service.CreateExcelService;
 import com.fanch35000.genealogycheckcivilstatus.service.GedService;
 import com.fanch35000.genealogycheckcivilstatus.service.UpdateGedService;
 
-import java.util.HashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class GenealogyCheckcivilstatusApplication {
 
-	public static void main (String[] args){
+    public static void main(String[] args) {
 
-		// List des fichiers
-		String dirLocation = "/home/fminier/Perso/genealogie/data/actes";
-		HashMap<Integer, CivilStatus> ancetres = new CivilStatusService().launch(dirLocation);
+        // List des fichiers
+        String dirLocation = "/home/fminier/Perso/genealogie/data/actes";
+        CivilStatusService civilStatusService = new CivilStatusService();
+        civilStatusService.launch(dirLocation);
 
-		String gedLocation = "/home/fminier/Perso/genealogie/data/ged/fminier-ASC.ged";
-		HashMap<String, Indi> indis = new GedService().launch(gedLocation);
+        String gedLocation = "/home/fminier/Perso/genealogie/data/ged/fminier-ASC.ged";
+        HashMap<String, Indi> indis = new GedService().launch(gedLocation);
 
-		String xlsLocation = "/home/fminier/Perso/genealogie/data/ancetres.xls";
-		new CreateExcelService().launch(xlsLocation, ancetres, indis);
+        String xlsLocation = "/home/fminier/Perso/genealogie/data/ancetres.xls";
+        CreateExcelService createExcelService = new CreateExcelService();
+        createExcelService.launch(xlsLocation, civilStatusService.ancetres, indis);
 
-		String newGedLocation = "/home/fminier/Perso/genealogie/data/ged/fminier-ASC-new.ged";
-		new UpdateGedService().launch(gedLocation, newGedLocation, ancetres, indis);
+        String newGedLocation = "/home/fminier/Perso/genealogie/data/ged/fminier-ASC-new.ged";
+        UpdateGedService updateGedService = new UpdateGedService();
+        updateGedService.launch(gedLocation, newGedLocation, civilStatusService.ancetres, indis);
 
-	}
+        /*********
+         * CHECK *
+         *********/
+
+        // Les SOSA sur les actes papiers sont retrouvés dans les GED
+        for (Integer sosa : civilStatusService.listSosa) {
+            if (!createExcelService.listSosa.contains(sosa))
+                System.err.println("SOSA dans fichier JPG non présent dans GED : " + sosa);
+        }
+
+        // Les actes papiers n'ont pas pu être ajouté dans le GED
+        // Pas de rubrique BIRT DEAT ou MARR dans le GED
+        List<String> listFichierJpg = new ArrayList<>();
+        civilStatusService.ancetres.values().stream().sorted((s1, s2) -> s1.getSosa().compareTo(s2.getSosa())).forEach(status -> addActe(status, listFichierJpg));
+        listFichierJpg.removeAll(updateGedService.listFichier);
+        for (String fichier : listFichierJpg) {
+            System.err.println("Fichier JPG non ajouté dans GED  : " + fichier);
+        }
+
+    }
+
+    private final static void addActe(CivilStatus actes, List<String> listFichier){
+        if(actes.getFichierActeNaissance()!=null){
+            listFichier.add(actes.getFichierActeNaissance());
+        }
+        if(actes.getFichierActeMariage()!=null){
+            listFichier.add(actes.getFichierActeMariage());
+        }
+        if(actes.getFichierActeDeces()!=null){
+            listFichier.add(actes.getFichierActeDeces());
+        }
+    }
 
 }
