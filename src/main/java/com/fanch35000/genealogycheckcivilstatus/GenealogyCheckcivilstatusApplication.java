@@ -42,12 +42,19 @@ public class GenealogyCheckcivilstatusApplication {
 
         // Les actes papiers n'ont pas pu être ajouté dans le GED
         // Pas de rubrique BIRT DEAT ou MARR dans le GED
-        List<String> listFichierJpg = new ArrayList<>();
+        final List<String> listFichierJpg = new ArrayList<>();
         civilStatusService.ancetres.values().stream().sorted((s1, s2) -> s1.getSosa().compareTo(s2.getSosa())).forEach(status -> addActe(status, listFichierJpg));
         listFichierJpg.removeAll(updateGedService.listFichier);
+        System.err.println();
+        System.err.println("********************************************************************");
+        System.err.println("* Liste des fichiers JPG non ajouté(s) dans le GED (triés par sosa):");
+        System.err.println("* ");
         for (String fichier : listFichierJpg) {
-            System.err.println("Fichier JPG non ajouté dans GED  : " + fichier);
+            System.err.println("* " + fichier);
         }
+        System.err.println("* ");
+        System.err.println("* TOTAL de date à ajouter : " + listFichierJpg.size());
+        System.err.println("***************************");
 
     }
 

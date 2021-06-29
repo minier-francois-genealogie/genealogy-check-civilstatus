@@ -4,10 +4,8 @@ import com.fanch35000.genealogycheckcivilstatus.entity.civilstatus.CivilStatus;
 import com.fanch35000.genealogycheckcivilstatus.entity.ged.Fam;
 import com.fanch35000.genealogycheckcivilstatus.entity.ged.Indi;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -21,8 +19,7 @@ public class UpdateGedService extends GedService {
     public final void launch(String gedLocation, String newGedLocation, HashMap<Integer, CivilStatus> ancetres, HashMap<String, Indi> indis) {
         try {
             File fileGed = new File(gedLocation);
-            Writer fileNewGed = new FileWriter(newGedLocation);
-
+            OutputStreamWriter fileNewGed = new OutputStreamWriter(new FileOutputStream(newGedLocation), StandardCharsets.UTF_8);
             completeFile(fileGed, fileNewGed, ancetres, indis);
         } catch (IOException e) {
             e.printStackTrace();
@@ -56,7 +53,9 @@ public class UpdateGedService extends GedService {
                     fileNewGed.write(line + "\n");
 
                     if (line.startsWith(BLOCK_PREFIX)) {
-                        if (line.contains("INDI")) {
+                        if(line.contains("0 HEAD")){
+                            fileNewGed.write("1 SOUR MonGenerateur");
+                        } else if (line.contains("INDI")) {
                             Indi currentIndi = null;
                             Matcher macher = PATTERN_INDI.matcher(line);
                             if (macher.matches()) {
@@ -77,12 +76,12 @@ public class UpdateGedService extends GedService {
                                     case "1 BIRT":
                                         civilStatus = ancetres.get(CreateExcelService.getMinSosa(((Indi) currentRecord).getSosas()));
                                         if (civilStatus != null)
-                                            writeSource(fileNewGed, "Acte de naissance", civilStatus.getFichierActeNaissance());
+                                            writeSource(TypeAct.NAISSANCE, fileNewGed, "Acte de naissance", civilStatus.getFichierActeNaissance());
                                         break;
                                     case "1 DEAT":
                                         civilStatus = ancetres.get(CreateExcelService.getMinSosa(((Indi) currentRecord).getSosas()));
                                         if (civilStatus != null)
-                                            writeSource(fileNewGed, "Acte de décès", civilStatus.getFichierActeDeces());
+                                            writeSource(TypeAct.DECES, fileNewGed, "Acte de décès", civilStatus.getFichierActeDeces());
                                         break;
                                 }
                             } else if (currentRecord instanceof Fam) {
@@ -96,7 +95,7 @@ public class UpdateGedService extends GedService {
                                     case "1 HUSB":
                                         civilStatus = ancetres.get(sosa);
                                         if (civilStatus != null)
-                                            writeSource(fileNewGed, "Acte de mariage", civilStatus.getFichierActeMariage());
+                                            writeSource(TypeAct.MARIAGE, fileNewGed, "Acte de mariage", civilStatus.getFichierActeMariage());
                                         break;
                                 }
                             }
@@ -115,14 +114,24 @@ public class UpdateGedService extends GedService {
     }
 
 
-    private final void writeSource(Writer fileNewGed, String title, String acte) throws IOException {
+    private final void writeSource(TypeAct typeAct, Writer fileNewGed, String title, String acte) throws IOException {
         if (acte != null) {
             listFichier.add(acte);
             String link = "<a href=\"https://raw.githubusercontent.com/minier-francois-genealogie/data/main/actes/" + acte + "\">";
             link += title;
             link += "</a>";
-            fileNewGed.write("2 SOUR " + link + "\n");
+            String indice = "2";
+            if(typeAct==TypeAct.MARIAGE){
+                indice = "1";
+            }
+            fileNewGed.write(indice + " SOUR " + link + "\n");
         }
+    }
+
+    enum TypeAct {
+        NAISSANCE,
+        MARIAGE,
+        DECES;
     }
 
 }
