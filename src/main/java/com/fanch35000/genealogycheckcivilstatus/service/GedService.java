@@ -25,11 +25,15 @@ public class GedService {
 
     private final void evaluateSosa() {
         // find root
+        /*
         Optional<Indi> first = INDIS.values().stream().findAny();
         if (first.isPresent()) {
             Indi root = findRoot(first.get());
             evaluateSosa(root, 1);
         }
+        */
+        Indi first = INDIS.get("654");
+        evaluateSosa(first, 1);
     }
 
     private void evaluateSosa(Indi indi, int sosa) {
@@ -111,6 +115,9 @@ public class GedService {
                                     break;
                                 case "1 DEAT":
                                     event = "DEAT";
+                                    break;
+                                case "1 CHAN":
+                                    event = "CHAN";
                                     break;
                                 case "2 DATE":
                                     analyseDATE(event, currentIndi, line);
@@ -196,7 +203,7 @@ public class GedService {
         }
     }
 
-    private final static Pattern PATTERN_NAME = Pattern.compile("(.+)\\s/(.+)/");
+    private final static Pattern PATTERN_NAME = Pattern.compile("(.+)/(.+)/");
 
     private final void analyseNAME(Indi currentRecord, String lineIndi) {
         String suffix = lineIndi.substring(6);
@@ -268,7 +275,7 @@ public class GedService {
         if (date != null) {
             Matcher macher = PATTERN_DATE.matcher(date);
             if (macher.matches()) {
-                return macher.group(1) + "/" + convertMonth(macher.group(2)) + "/" + macher.group(3);
+                return (macher.group(1).length()==1?"0":"") + macher.group(1) + "/" + convertMonth(macher.group(2)) + "/" + macher.group(3);
             } else {
                 date = date.replace("BEF", "Avant ");
                 date = date.replace("AFT", "Après ");

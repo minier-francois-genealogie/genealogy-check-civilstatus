@@ -673,9 +673,12 @@ public class CreateExcelService {
         if (place != null) {
             if (place.contains("] - ")) {
                 place = place.substring(place.indexOf("] - ") + 4);
-            }
-            if (place.contains(",")) {
+            } else if (place.contains(", ")) {
                 place = place.substring(0, place.indexOf(", "));
+            } else if (place.endsWith(",")) {
+                place = place.substring(0, place.indexOf(","));
+            } else if (place.contains(",")) {
+                place = place.substring(0,place.indexOf(",")) + " [" + place.substring(place.lastIndexOf(",")+1,place.length()) + "]";
             }
         }
         return place;
@@ -693,8 +696,14 @@ public class CreateExcelService {
             anchor.setRow2(row.getRowNum() + 6);
             Comment comment = drawing.createCellComment(anchor);
             String commentaire2 = commentaire;
-            commentaire2 = commentaire2.replaceAll("] - ", "]\n");
-            commentaire2 = commentaire2.replaceAll(", ", "\n");
+            if(commentaire2.contains(", ")) {
+                // Format 1
+                commentaire2 = commentaire2.replaceAll("] - ", "]\n");
+                commentaire2 = commentaire2.replaceAll(", ", "\n");
+            } else {
+                // Format 2
+                commentaire2 = commentaire2.replaceAll(",", "\n");
+            }
             RichTextString str = factory.createRichTextString(commentaire2);
             comment.setString(str);
             comment.setAuthor("Apache POI");
